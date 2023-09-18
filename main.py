@@ -36,7 +36,10 @@ def convert_color(check, row, i):
 
 def scan_map(row):
     result = []
-    for i in range(10):
+    sequence = []
+    if row % 2 == 0: sequence = range(10)
+    else: sequence = range(9, -1, -1)
+    for i in sequence:
         # move belt
         sensor_motor.run_target(300,54*i,wait=True)
         # scan color
@@ -45,11 +48,13 @@ def scan_map(row):
         ev3.screen.draw_text(40,100, str(check))
         result.append(convert_color(check, row, i))
         wait(500)
-    # scan last color
-    check = sensor.color()
-    result.append(convert_color(check, row, i))
-
-    return result
+    # # scan last color
+    # check = sensor.color()
+    # result.append(convert_color(check, row, i))
+    if row % 2 == 0: return result
+    else: 
+        result.reverse()
+        return result
         
 
 
@@ -73,8 +78,6 @@ for row in range(10):
     arr.append(scan_map(row))
     if row < 9:
         # move to next row
-        show_screen("Initializing...")
-        sensor_motor.run_target(400, 0, wait=True)
         robot.straight(CONST_MOVE_AMOUNT)
     else:
         # move to start point at final
@@ -89,3 +92,5 @@ for row in range(10):
 # reset to restart
 move_col(0)
 move_row(cur_row, 0)
+for i in arr:
+    print(i)
