@@ -6,7 +6,7 @@ from pybricks.tools import wait
 from pybricks.robotics import DriveBase
 from collections import deque
 
-CONST_MOVE_AMOUNT = 18.5
+CONST_MOVE_AMOUNT = 18
 arr = []
 global start, end
 
@@ -15,7 +15,7 @@ def show_screen(str):
     ev3.screen.draw_text(40, 50, str)
     
 def move_col(target):
-    sensor_motor.run_target(400, 54*target, wait=True)
+    sensor_motor.run_target(400, 53.7*target, wait=True)
 
 def move_row(cur, target):
     robot.straight((target-cur)*CONST_MOVE_AMOUNT)
@@ -42,17 +42,13 @@ def scan_map(row):
     else: sequence = range(9, -1, -1)
     for i in sequence:
         # move belt
-        sensor_motor.run_target(250,54*i,wait=True)
+        sensor_motor.run_target(230,54*i,wait=True)
         wait(200)
         # scan color
         check = sensor.color()
         show_screen(str(i*10)+"% / 100\n")
         ev3.screen.draw_text(40,100, str(check))
         result.append(convert_color(check, row, i))
-        wait(200)
-    # # scan last color
-    # check = sensor.color()
-    # result.append(convert_color(check, row, i))
     if row % 2 == 0: return result
     else: 
         result.reverse()
@@ -88,7 +84,26 @@ def bfs(root):
             route_q.append(route_tmp)
             queue.append([nx, ny])        
             visited[nx][ny] = 1 
-
+            
+def optimize(path):
+    result = [path[0]]
+    index, cur = 1, 0
+    row_change, col_change = False, False
+    while index < len(path):
+        if path[cur][0] != path[index][0]:
+            row_change = True
+        else:
+            col_change = True
+        if row_change and col_change:
+            result.append(path[cur])
+            if path[cur][0] != path[index][0]:
+                col_change = False
+            else:
+                row_change = False
+        cur+=1
+        index+=1
+    result.append(path[cur])
+    return result
 # Create your objects here.
 ev3 = EV3Brick()
 ev3.screen.clear()
@@ -97,39 +112,23 @@ sensor_motor = Motor(Port.C, positive_direction=Direction.COUNTERCLOCKWISE, gear
 left_motor = Motor(Port.D)
 right_motor = Motor(Port.A)
 robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=104)
-robot.settings(straight_speed=40)
+robot.settings(straight_speed=50)
 sensor = ColorSensor(Port.S2)
 
-print(arr)
-print("HEllo")
-
-# Write your program here.
-# ev3.speaker.beep()
+# main logic
+ev3.speaker.beep()
 ev3.screen.clear()
 cur_row = 0
 for row in range(10):
     cur_row = row
     arr.append(scan_map(row))
-    if row < 9:
-        # move to next row
-        robot.straight(CONST_MOVE_AMOUNT)
-    else:
-        # move to start point at final
-        global start
-        global end
-        print(start,"start")
-        print(end,"end")
-        move_col(start[1])
-        cur_row = move_row(cur_row, start[0])
-        wait(2000)
-        move_col(end[1])
-        cur_row = move_row(cur_row, end[0])
-print(arr)
-print("HEllo")
-print(str(arr[0][0]) + " is 0, 0.")
-
+    if row == 9: break;
+    robot.straight(CONST_MOVE_AMOUNT)
+# move to start point at final
 # find path
 path = bfs(start)
+print(path)
+path = optimize(path)
 print(path)
 
 # drive the path
@@ -137,7 +136,6 @@ print(path)
 for now in path :
     move_col(now[1])
     cur_row = move_row(cur_row, now[0])
-    print(now)
-    print("is now")
-
-
+ev3.speaker.beep()
+move_row(cur_row, 0)
+move_col(0)
