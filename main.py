@@ -6,7 +6,7 @@ from pybricks.tools import wait
 from pybricks.robotics import DriveBase
 from collections import deque
 
-CONST_MOVE_AMOUNT = 18
+CONST_MOVE_AMOUNT = 18.5
 arr = []
 global start, end
 
@@ -42,13 +42,14 @@ def scan_map(row):
     else: sequence = range(9, -1, -1)
     for i in sequence:
         # move belt
-        sensor_motor.run_target(300,54*i,wait=True)
+        sensor_motor.run_target(250,54*i,wait=True)
+        wait(200)
         # scan color
         check = sensor.color()
         show_screen(str(i*10)+"% / 100\n")
         ev3.screen.draw_text(40,100, str(check))
         result.append(convert_color(check, row, i))
-        wait(500)
+        wait(200)
     # # scan last color
     # check = sensor.color()
     # result.append(convert_color(check, row, i))
