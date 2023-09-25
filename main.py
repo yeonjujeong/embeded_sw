@@ -7,7 +7,7 @@ from pybricks.robotics import DriveBase
 from collections import deque
 
 CONST_MOVE_AMOUNT = 18.3
-arr = []
+arr = [] # array that contains the scanning data
 global start, end
 
 def show_screen(str):
@@ -43,7 +43,7 @@ def scan_map(row):
     for i in sequence:
         # move belt
         sensor_motor.run_target(180,54*i,wait=True)
-        wait(100)
+        wait(200)
         # scan color
         check = sensor.color()
         show_screen(str(i*10)+"% / 100\n")
@@ -58,11 +58,10 @@ def bfs(root):
     visited = [[0] * 10 for _ in range(10)]
     queue = deque([root])
     route_q = deque([[root]])
+    visited[root[0]][root[1]] = 1
     
     dx = [0, 1, 0, -1]
     dy = [-1, 0, 1, 0]
-    
-    visited[root[0]][root[1]] = 1
 
     while queue:
         now = queue.popleft()
@@ -104,10 +103,10 @@ def optimize(path):
         index+=1
     result.append(path[cur])
     return result
-# Create your objects here.
+
+# initiallize the settings
 ev3 = EV3Brick()
 ev3.screen.clear()
-# test_motor = Motor(Port.B)
 sensor_motor = Motor(Port.C, positive_direction=Direction.COUNTERCLOCKWISE, gears=[10])
 left_motor = Motor(Port.D)
 right_motor = Motor(Port.A)
@@ -115,8 +114,7 @@ robot = DriveBase(left_motor, right_motor, wheel_diameter=55.5, axle_track=104)
 robot.settings(straight_speed=50)
 sensor = ColorSensor(Port.S2)
 
-# main logic
-ev3.speaker.beep()
+# scan the map
 ev3.screen.clear()
 cur_row = 0
 for row in range(10):
@@ -124,18 +122,21 @@ for row in range(10):
     arr.append(scan_map(row))
     if row == 9: break;
     robot.straight(CONST_MOVE_AMOUNT)
-# move to start point at final
-# find path
+
+# find the path
 path = bfs(start)
 print(path)
 path = optimize(path)
 print(path)
 
 # drive the path
-# path = [[0, 1], [1, 1], [2, 1], [2, 2], [2, 3], [3, 3], [4, 3], [5, 3], [5, 4], [5, 5], [5, 6], [5, 7], [6, 7], [7, 7], [7, 6], [7, 5], [8, 5], [9, 5]]
 for now in path :
     move_col(now[1])
     cur_row = move_row(cur_row, now[0])
+    if path.index(now) == 0: 
+        ev3.speaker.beep()        
 ev3.speaker.beep()
+
+# move the start point
 move_row(cur_row, 0)
 move_col(0)
